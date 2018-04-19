@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,7 +14,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter mAdapter;
+//    private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
 //    private String[] myDataset = new String[20];
@@ -50,18 +51,44 @@ public class MainActivity extends AppCompatActivity {
 
 
         // 配列をArrayListにコピー
-        List<String> itemNames = new ArrayList<String>(Arrays.asList(names));
-        List<Integer> itemImages = new ArrayList<Integer>(Arrays.asList(photos));
+        final List<String> itemNames = new ArrayList<String>(Arrays.asList(names));
+        final List<Integer> itemImages = new ArrayList<Integer>(Arrays.asList(photos));
 
-        List<String> itemEmails = new ArrayList<String>();
+        final List<String> itemEmails = new ArrayList<String>();
         for(int i = 0; i < itemNames.size(); i++ ){
             String str = String.format(Locale.US, "%s@gmail.com", itemNames.get(i));
             itemEmails.add(str);
         }
 
         // specify an adapter (see also next example)
-        RecyclerView.Adapter mAdapter = new MyAdapter(itemImages, itemNames, itemEmails);
+        final RecyclerView.Adapter mAdapter = new MyAdapter(itemImages, itemNames, itemEmails);
         mRecyclerView.setAdapter(mAdapter);
+
+        // ItemTouchHelper
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(
+                new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP|ItemTouchHelper.DOWN, ItemTouchHelper.RIGHT) {
+
+                    @Override
+                    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                        final int fromPos = viewHolder.getAdapterPosition();
+                        final int toPos = target.getAdapterPosition();
+                        mAdapter.notifyItemMoved(fromPos,toPos);
+
+                        return true;
+                    }
+
+                    @Override
+                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                        final int fromPos = viewHolder.getAdapterPosition();
+                        itemImages.remove(fromPos);
+                        itemNames.remove(fromPos);
+                        itemEmails.remove(fromPos);
+
+                        mAdapter.notifyItemRemoved(fromPos);
+                    }
+                });
+
+        itemTouchHelper.attachToRecyclerView(mRecyclerView);
 
 
 //        for(int i = 0; i < myDataset.length; i++) {
